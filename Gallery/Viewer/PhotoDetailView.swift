@@ -9,15 +9,17 @@ import SwiftUI
 import PhotosUI
 
 struct PhotoDetailView: View {
-    let images: [UIImage]
-    let photos: [Photo]
-
+    @State private var photosPickerItems: [PhotosPickerItem] = []
+    @State private var images: [UIImage] = []
+    @State private var photos: [Photo] = []
+    @State private var isPresentingPicker: Bool = false
+    
     var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 12)], spacing: 12) {
-                    ForEach(Array(images.enumerated()), id: \.offset) { _, uiImage in
-                        Image(uiImage: uiImage)
+            ScrollView(.horizontal) {
+                HStack {
+                    ForEach(images, id: \.self) { photo in
+                        Image(uiImage: photo)
                             .resizable()
                             .scaledToFill()
                             .frame(width: 120, height: 120)
@@ -26,12 +28,43 @@ struct PhotoDetailView: View {
                     }
                 }
                 .padding()
+                .navigationTitle("Photo Details...")
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            isPresentingPicker = true
+                        } label: {
+                            Image(systemName: "camera")
+                        }
+                        .accessibilityLabel("Pick Photos")
+                    }
+                }
+                .photosPicker(isPresented: $isPresentingPicker, selection: $photosPickerItems, maxSelectionCount: 0, matching: .images)
+                .onChange(of: photosPickerItems) { oldValue, newValue in
+                    Task {
+                        var photo: Photo
+                        
+                        for item in photosPickerItems {
+                            if let data = try? await item.loadTransferable(type: Data.self) {
+                                photo = Photo(data: data)
+                                if let uiImage = UIImage(data: data) {
+                                    images.append(uiImage)
+                                    photos.append(photo)
+                                    //context.insert(photo)
+                                }
+                                
+                                //let _ = PhotoGallery(photos: self.images)
+                            }
+                        }
+                        
+                        photosPickerItems.removeAll()
+                    }
+                }
             }
-            .navigationTitle("Photo Details")
         }
     }
 }
 
 #Preview {
-    PhotoDetailView(images: [], photos: [])
+    PhotoDetailView()
 }

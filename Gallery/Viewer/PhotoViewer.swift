@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 
+/*
 struct PhotoViewer: View {
     @State private var photosPickerItems: [PhotosPickerItem] = []
     @State private var images: [UIImage] = []
@@ -69,3 +70,4 @@ struct PhotoViewer: View {
 #Preview {
     PhotoViewer()
 }
+*/
